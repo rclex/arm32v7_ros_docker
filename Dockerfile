@@ -1,23 +1,39 @@
-FROM arm32v7/ubuntu:focal
+# ARG is overridable by --build-arg
+ARG UBUNTU_CODENAME=focal
+ARG ROS_DISTRO=foxy
+
+FROM arm32v7/ubuntu:${UBUNTU_CODENAME}
+
+# NOTE: An ARG declared before a FROM is outside of a build stage, so it can’t be used in any instruction after a FROM.
+# To use the default value of an ARG declared before the first FROM use an ARG instruction without a value inside of a build stage
+ARG UBUNTU_CODENAME
+ARG ROS_DISTRO
 
 # Set locale
-RUN apt update && apt install -y locales && rm -rf /var/lib/apt/lists/* \
-	&& locale-gen en_US en_US.UTF-8 && update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
+RUN apt-get update && apt-get install -y locales \
+	&& locale-gen en_US en_US.UTF-8 && update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8 \
+  && rm -rf /var/lib/apt/lists/*
+
 ENV LANG en_US.utf8
 
 # Add the ROS 2 apt repository
-RUN apt install software-properties-common && add-apt-repository universe
+RUN apt-get update && apt-get install -y software-properties-common \
+  && add-apt-repository universe \
+  && rm -rf /var/lib/apt/lists/*
 
-RUN apt update && apt install curl gnupg2 lsb-release && curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key  -o /usr/share/keyrings/ros-archive-keyring.gpg
+RUN apt-get update && apt-get install -y curl gnupg2 lsb-release \
+  && curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg \
+  && rm -rf /var/lib/apt/lists/*
 
-RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(source /etc/os-release && echo $UBUNTU_CODENAME) main" | sudo tee /etc/apt/sources.list.d/ros2.list > /dev/null
+RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu ${UBUNTU_CODENAME} main" | tee /etc/apt/sources.list.d/ros2.list > /dev/null
 
 # Install development tools and ROS tools
-RUN sudo apt update && sudo apt install -y \
+RUN apt-get update && apt-get install -y \
   libbullet-dev \
   python3-pip \
   python3-pytest-cov \
-  ros-dev-tools
+  ros-dev-tools \
+  && rm -rf /var/lib/apt/lists/*
 
 # install some pip packages needed for testing
 RUN python3 -m pip install -U \
@@ -33,24 +49,29 @@ RUN python3 -m pip install -U \
   pytest-repeat \
   pytest-rerunfailures \
   pytest
+
 ## install Fast-RTPS dependencies
-RUN apt install --no-install-recommends -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
   libasio-dev \
-  libtinyxml2-dev
+  libtinyxml2-dev \
+  && rm -rf /var/lib/apt/lists/*
+
 ## install Cyclone DDS dependencies
-RUN apt install --no-install-recommends -y \
-  libcunit1-dev
+RUN apt-get update && apt-get install -y --no-install-recommends \
+  libcunit1-dev \
+  && rm -rf /var/lib/apt/lists/*
 
 # Get ROS 2 code
-RUN mkdir -p /root/ros2_foxy/src && \
-  cd /root/ros2_foxy && \
-  vcs import --input https://raw.githubusercontent.com/ros2/ros2/foxy/ros2.repos src
+RUN update-ca-certificates --fresh \
+  && mkdir -p /root/ros2_ws/src \
+  && vcs import --input https://raw.githubusercontent.com/ros2/ros2/foxy/ros2.repos /root/ros2_ws/src
 
 # Install dependencies using rosdep
-RUN apt upgrade
-RUN rosdep init && \
-  rosdep update && \
-  rosdep install --from-paths src --ignore-src -y --skip-keys "fastcdr rti-connext-dds-5.3.1 urdfdom_headers"
+RUN apt-get update && apt-get upgrade \
+  && update-ca-certificates --fresh \
+  && rosdep init \
+  && rosdep update \
+  && rosdep install --from-paths /root/ros2_ws/src --ignore-src -y --skip-keys "fastcdr rti-connext-dds-5.3.1 urdfdom_headers" \
+  && rm -rf /var/lib/apt/lists/*
 
-RUN cd /root/ros2_foxy && \
-  colcon build --symlink-install
+RUN cd /root/ros2_ws && colcon build --symlink-install
