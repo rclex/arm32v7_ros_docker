@@ -74,4 +74,12 @@ RUN apt-get update && apt-get upgrade \
   && rosdep install --from-paths /root/ros2_ws/src --ignore-src -y --skip-keys "fastcdr rti-connext-dds-5.3.1 urdfdom_headers" \
   && rm -rf /var/lib/apt/lists/*
 
+# Install latest cmake
+RUN apt-get update && apt-get install gpg wget \
+  && wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | tee /usr/share/keyrings/kitware-archive-keyring.gpg >/dev/null \
+  && echo "deb [signed-by=/usr/share/keyrings/kitware-archive-keyring.gpg] https://apt.kitware.com/ubuntu/ ${UBUNTU_CODENAME} main" | tee /etc/apt/sources.list.d/kitware.list >/dev/null \
+  && apt-get update \
+  && apt-get install -y cmake \
+  && rm -rf /var/lib/apt/lists/*
+
 RUN cd /root/ros2_ws && colcon build --symlink-install
