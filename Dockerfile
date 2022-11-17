@@ -64,7 +64,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Get ROS 2 code
 RUN update-ca-certificates --fresh \
   && mkdir -p /root/ros2_ws/src \
-  && vcs import --input https://raw.githubusercontent.com/ros2/ros2/foxy/ros2.repos /root/ros2_ws/src
+  && vcs import --input https://raw.githubusercontent.com/ros2/ros2/${ROS_DISTRO}/ros2.repos /root/ros2_ws/src
 
 # Install dependencies using rosdep
 RUN apt-get update && apt-get upgrade \
