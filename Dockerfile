@@ -67,7 +67,7 @@ RUN update-ca-certificates --fresh \
   && vcs import --input https://raw.githubusercontent.com/ros2/ros2/${ROS_DISTRO}/ros2.repos /root/ros2_ws/src
 
 # Install dependencies using rosdep
-RUN apt-get update && apt-get upgrade \
+RUN apt-get update && apt-get upgrade -y \
   && update-ca-certificates --fresh \
   && rosdep init \
   && rosdep update \
@@ -75,7 +75,7 @@ RUN apt-get update && apt-get upgrade \
   && rm -rf /var/lib/apt/lists/*
 
 # Install latest cmake
-RUN apt-get update && apt-get install gpg wget \
+RUN apt-get update && apt-get install -y gpg wget \
   && wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | tee /usr/share/keyrings/kitware-archive-keyring.gpg >/dev/null \
   && echo "deb [signed-by=/usr/share/keyrings/kitware-archive-keyring.gpg] https://apt.kitware.com/ubuntu/ ${UBUNTU_CODENAME} main" | tee /etc/apt/sources.list.d/kitware.list >/dev/null \
   && apt-get update \
