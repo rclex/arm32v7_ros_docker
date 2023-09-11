@@ -6,7 +6,7 @@ Dockerfile for ROS 2 on arm32v7 arch by building from source
 
 This Dockerfile is based on the procedure in the following link.
 
-- https://docs.ros.org/en/foxy/Installation/Alternatives/Ubuntu-Development-Setup.html
+- https://docs.ros.org/en/humble/Installation/Alternatives/Ubuntu-Development-Setup.html
 
 The prebuilt image has been published on our Docker Hub repository
 
@@ -21,7 +21,7 @@ In other words, the operation of this Dockerfile and Docker container on the arm
 
 ```
 # cross compile ROS 2 resources
-docker buildx build --build-arg UBUNTU_CODENAME=focal ROS_DISTRO=foxy -t rclex/arm32v7_ros_docker:foxy .
-# install vendor resources ex) libspdlog, libtinyxml2
-docker buildx build --build-arg ROS_DISTRO=foxy -t rclex/arm32v7_ros_docker_with_vendor_resources:foxy -f Dockerfile.with_vendor_resources .
+docker buildx build -t rclex/arm32v7_ros_docker:humble -f Dockerfile.humble .
+# install vendor resources ex) libspdlog, libtinyxml2 libfmt
+docker buildx build -t rclex/arm32v7_ros_docker_with_vendor_resources:humble -f Dockerfile.with_vendor_resources.humble .
 ```
