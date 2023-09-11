@@ -1,0 +1,6 @@
+ARG ROS_DISTRO=humble
+
+FROM rclex/arm32v7_ros_docker:${ROS_DISTRO}
+
+RUN apt-get update && apt-get install -y libspdlog-dev libtinyxml2-dev libfmt-dev \
+  && rm -rf /var/lib/apt/lists/*

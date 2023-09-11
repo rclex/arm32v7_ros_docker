@@ -1,0 +1,76 @@
+# ARG is overridable by --build-arg
+ARG UBUNTU_CODENAME=jammy
+ARG ROS_DISTRO=humble
+
+FROM arm32v7/ubuntu:${UBUNTU_CODENAME}
+
+# NOTE: An ARG declared before a FROM is outside of a build stage, so it can’t be used in any instruction after a FROM.
+# To use the default value of an ARG declared before the first FROM use an ARG instruction without a value inside of a build stage
+ARG UBUNTU_CODENAME
+ARG ROS_DISTRO
+
+# Set locale
+RUN apt-get update && apt-get install -y locales \
+	&& locale-gen en_US en_US.UTF-8 \
+  && update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8 \
+  && rm -rf /var/lib/apt/lists/*
+
+ENV LANG en_US.utf8
+
+# Add the ROS 2 apt repository
+RUN apt-get update && apt-get install -y software-properties-common \
+  && add-apt-repository universe \
+  && rm -rf /var/lib/apt/lists/*
+
+RUN apt-get update && apt-get install -y curl \
+  && curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg \
+  && rm -rf /var/lib/apt/lists/*
+
+RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu ${UBUNTU_CODENAME} main" | tee /etc/apt/sources.list.d/ros2.list > /dev/null
+
+ENV TZ=Asia/Tokyo
+RUN ln -snf /usr/share/zoneinfo/${TZ} /etc/localtime && echo ${TZ} > /etc/timezone
+
+# Install development tools and ROS tools
+RUN apt-get update && apt-get install -y \
+  python3-flake8-docstrings \
+  python3-pip \
+  python3-pytest-cov \
+  ros-dev-tools \
+  && rm -rf /var/lib/apt/lists/*
+
+# install some pip packages needed for testing
+RUN apt-get update && apt-get install -y \
+  python3-flake8-blind-except \
+  python3-flake8-builtins \
+  python3-flake8-class-newline \
+  python3-flake8-comprehensions \
+  python3-flake8-deprecated \
+  python3-flake8-import-order \
+  python3-flake8-quotes \
+  python3-pytest-repeat \
+  python3-pytest-rerunfailures \
+  && rm -rf /var/lib/apt/lists/*
+
+# Get ROS 2 code
+RUN update-ca-certificates --fresh \
+  && mkdir -p /root/ros2_ws/src \
+  && vcs import --input https://raw.githubusercontent.com/ros2/ros2/${ROS_DISTRO}/ros2.repos /root/ros2_ws/src
+
+# Install dependencies using rosdep
+RUN apt-get update && apt-get upgrade -y \
+  && update-ca-certificates --fresh \
+  && rosdep init \
+  && rosdep update \
+  && rosdep install --from-paths /root/ros2_ws/src --ignore-src -y --skip-keys "fastcdr rti-connext-dds-6.0.1 urdfdom_headers" \
+  && rm -rf /var/lib/apt/lists/*
+
+# Install latest cmake
+RUN apt-get update && apt-get install -y gpg wget \
+  && wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | tee /usr/share/keyrings/kitware-archive-keyring.gpg >/dev/null \
+  && echo "deb [signed-by=/usr/share/keyrings/kitware-archive-keyring.gpg] https://apt.kitware.com/ubuntu/ ${UBUNTU_CODENAME} main" | tee /etc/apt/sources.list.d/kitware.list >/dev/null \
+  && apt-get update \
+  && apt-get install -y cmake \
+  && rm -rf /var/lib/apt/lists/*
+
+RUN cd /root/ros2_ws && colcon build && rm -rf build log src
