@@ -21,7 +21,7 @@ In other words, the operation of this Dockerfile and Docker container on the arm
 
 ```
 # cross compile ROS 2 resources
-docker buildx build -t rclex/arm32v7_ros_docker:humble -f Dockerfile.humble .
+docker buildx build --platform linux/arm/v7 -t rclex/arm32v7_ros_docker:humble -f Dockerfile.humble .
 # install vendor resources ex) libspdlog, libtinyxml2 libfmt
-docker buildx build -t rclex/arm32v7_ros_docker_with_vendor_resources:humble -f Dockerfile.with_vendor_resources.humble .
+docker buildx build --platform linux/arm/v7 -t rclex/arm32v7_ros_docker_with_vendor_resources:humble -f Dockerfile.with_vendor_resources.humble .
 ```
