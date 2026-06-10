@@ -10,8 +10,8 @@ This Dockerfile is based on the procedure in the following link.
 
 The prebuilt image has been published on our Docker Hub repository
 
-- https://hub.docker.com/repository/docker/rclex/arm32v7_ros_docker
-- https://hub.docker.com/repository/docker/rclex/arm32v7_ros_docker_with_vendor_resources
+- https://hub.docker.com/r/rclex/arm32v7_ros_docker
+- https://hub.docker.com/r/rclex/arm32v7_ros_docker_with_vendor_resources
 
 Note that our motivation to prepare this repository and Docker image is just for [Rclex](https://github.com/rclex/rclex).
 When operating Rclex on Nerves, we need to copy ROS2 resources from the Docker container to the Nerves project.
